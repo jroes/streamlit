@@ -59,18 +59,20 @@ class UploadFileRequestHandlerTest(tornado.testing.AsyncHTTPTestCase):
             ]
         )
 
-    def _upload_files(self, params):
+    def _upload_files(
+        self,
+        params,
+        url="/_stcore/upload_file",
+    ):
         # We use requests.Request to construct our multipart/form-data request
         # here, because they are absurdly fiddly to compose, and Tornado
         # doesn't include a utility for building them. We then use self.fetch()
         # to actually send the request to the test server.
         req = requests.Request(
-            method="POST", url=self.get_url("/upload_file"), files=params
+            method="POST", url=self.get_url(url), files=params
         ).prepare()
 
-        return self.fetch(
-            "/upload_file", method=req.method, headers=req.headers, body=req.body
-        )
+        return self.fetch(url, method=req.method, headers=req.headers, body=req.body)
 
     def test_upload_one_file(self):
         """Uploading a file should populate our file_mgr."""
@@ -89,6 +91,24 @@ class UploadFileRequestHandlerTest(tornado.testing.AsyncHTTPTestCase):
                 (rec.id, rec.name, rec.data)
                 for rec in self.file_mgr.get_all_files("mockSessionId", "mockWidgetId")
             ],
+        )
+
+    def test_deprecated_endpoint(self):
+        """Uploading a file should populate our file_mgr."""
+        file = MockFile("filename", b"123")
+        params = {
+            file.name: file.data,
+            "sessionId": (None, "mockSessionId"),
+            "widgetId": (None, "mockWidgetId"),
+        }
+        with self.assertLogs(
+            "streamlit.web.server.upload_file_request_handler"
+        ) as logs:
+            response = self._upload_files(params, url="/upload_file")
+        self.assertEqual(200, response.code, response.reason)
+        self.assertEqual(
+            logs.records[0].getMessage(),
+            "Endpoint /_stcore/upload_file/ is deprecated. Please use /_stcore/_stcore/upload_file/ instead.",
         )
 
     def test_upload_multiple_files_error(self):

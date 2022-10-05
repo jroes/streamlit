@@ -639,9 +639,10 @@ describe("WebsocketConnection auth token handling", () => {
     // @ts-ignore
     ws.connectToWebSocket()
 
-    expect(websocketSpy).toHaveBeenCalledWith("ws://localhost:1234/stream", [
-      "streamlit",
-    ])
+    expect(websocketSpy).toHaveBeenCalledWith(
+      "ws://localhost:1234/_stcore/stream",
+      ["streamlit"]
+    )
   })
 
   it("sets second Sec-WebSocket-Protocol option to value from getHostAuthToken", () => {
@@ -652,9 +653,9 @@ describe("WebsocketConnection auth token handling", () => {
     // @ts-ignore
     ws.connectToWebSocket()
 
-    expect(websocketSpy).toHaveBeenCalledWith("ws://localhost:1234/stream", [
-      "streamlit",
-      "iAmAnAuthToken",
-    ])
+    expect(websocketSpy).toHaveBeenCalledWith(
+      "ws://localhost:1234/_stcore/stream",
+      ["streamlit", "iAmAnAuthToken"]
+    )
   })
 })

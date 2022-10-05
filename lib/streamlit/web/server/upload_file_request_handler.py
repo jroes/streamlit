@@ -22,8 +22,10 @@ from streamlit.logger import get_logger
 from streamlit.runtime.uploaded_file_manager import UploadedFileManager, UploadedFileRec
 from streamlit.web.server import routes, server_util
 
-# /upload_file/(optional session id)/(optional widget id)
-UPLOAD_FILE_ROUTE = "/upload_file/?(?P<session_id>[^/]*)?/?(?P<widget_id>[^/]*)?"
+# /_stcore/upload_file/(optional session id)/(optional widget id)
+UPLOAD_FILE_ROUTE = (
+    r"/(?P<subpath>_stcore/)?upload_file/?(?P<session_id>[^/]*)?/?(?P<widget_id>[^/]*)?"
+)
 LOGGER = get_logger(__name__)
 
 
@@ -99,10 +101,16 @@ class UploadFileRequestHandler(tornado.web.RequestHandler):
         # Convert bytes to string
         return arg[0].decode("utf-8")
 
-    def post(self, **kwargs):
+    def post(self, subpath: str, **kwargs):
         """Receive an uploaded file and add it to our UploadedFileManager.
         Return the file's ID, so that the client can refer to it.
         """
+        if not subpath == "_stcore/":
+            LOGGER.warning(
+                "Endpoint /_stcore/upload_file/ is deprecated. "
+                "Please use /_stcore/_stcore/upload_file/ instead."
+            )
+
         args: Dict[str, List[bytes]] = {}
         files: Dict[str, List[Any]] = {}
 

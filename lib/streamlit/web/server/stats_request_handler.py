@@ -16,9 +16,12 @@ from typing import List
 
 import tornado.web
 
+from streamlit.logger import get_logger
 from streamlit.proto.openmetrics_data_model_pb2 import GAUGE
 from streamlit.proto.openmetrics_data_model_pb2 import MetricSet as MetricSetProto
 from streamlit.runtime.stats import CacheStat, StatsManager
+
+_LOGGER = get_logger(__name__)
 
 
 class StatsRequestHandler(tornado.web.RequestHandler):
@@ -37,7 +40,12 @@ class StatsRequestHandler(tornado.web.RequestHandler):
         self.set_status(204)
         self.finish()
 
-    def get(self) -> None:
+    def get(self, subpath: str) -> None:
+        if not subpath == "_stcore/":
+            _LOGGER.warning(
+                "Endpoint /st-metrics is deprecated. Please use /_stcore/metrics instead."
+            )
+
         stats = self._manager.get_stats()
 
         # If the request asked for protobuf output, we return a serialized
