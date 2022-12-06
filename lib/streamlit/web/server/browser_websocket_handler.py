@@ -165,11 +165,3 @@ class BrowserWebSocketHandler(WebSocketHandler, SessionClient):
         else:
             # AppSession handles all other BackMsg types.
             self._runtime.handle_backmsg(self._session_id, msg)
-
-    async def get(self, subpath, *args: Any, **kwargs: Any) -> None:
-        if not subpath:
-            _LOGGER.warning(
-                "Endpoint /stream is deprecated. Please use /_stcore/stream instead."
-            )
-
-        return await super().get(*args, **kwargs)

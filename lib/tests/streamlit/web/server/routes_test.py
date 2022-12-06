@@ -109,21 +109,6 @@ class MessageCacheHandlerTest(tornado.testing.AsyncHTTPTestCase):
         self.assertEqual(404, self.fetch("/_stcore/message").code)
         self.assertEqual(404, self.fetch("/_stcore/message?id=non_existent").code)
 
-    def test_message_deprecated(self):
-        # Create a new ForwardMsg and cache it
-        msg = create_dataframe_msg([1, 2, 3])
-        msg_hash = populate_hash_if_needed(msg)
-        self._cache.add_message(msg, MagicMock(), 0)
-
-        # Cache hit
-        with self.assertLogs("streamlit.web.server.routes") as logs:
-            self.fetch("/message?hash=%s" % msg_hash)
-
-        self.assertEqual(
-            logs.records[0].getMessage(),
-            "Endpoint /message is deprecated. Please use /_stcore/message instead.",
-        )
-
 
 class StaticFileHandlerTest(tornado.testing.AsyncHTTPTestCase):
     def setUp(self) -> None:
@@ -228,13 +213,3 @@ class AllowedMessageOriginsHandlerTest(tornado.testing.AsyncHTTPTestCase):
         response = self.fetch("/_stcore/allowed-message-origins")
         self.assertEqual(200, response.code)
         self.assertIn("Set-Cookie", response.headers)
-
-    def test_allowed_message_origins_deprecated(self):
-        with self.assertLogs("streamlit.web.server.routes") as logs:
-            response = self.fetch("/st-allowed-message-origins")
-            self.assertEqual(200, response.code)
-
-        self.assertEqual(
-            logs.records[0].getMessage(),
-            "Endpoint /st-allowed-message-origins is deprecated. Please use /_stcore/allowed-message-origins instead.",
-        )

@@ -216,13 +216,7 @@ class AllowedMessageOriginsHandler(_SpecialRequestHandler):
         """
         self._callback = callback
 
-    async def get(self, endpoint: str) -> None:
-        if not endpoint.startswith("_stcore"):
-            _LOGGER.warning(
-                "Endpoint /st-allowed-message-origins is deprecated. "
-                "Please use /_stcore/allowed-message-origins instead."
-            )
-
+    async def get(self) -> None:
         ok, msg = await self._callback()
 
         if ok:
@@ -259,12 +253,7 @@ class MessageCacheHandler(tornado.web.RequestHandler):
         if allow_cross_origin_requests():
             self.set_header("Access-Control-Allow-Origin", "*")
 
-    def get(self, subpath):
-        if not subpath == "_stcore/":
-            _LOGGER.warning(
-                "Endpoint /message is deprecated. Please use /_stcore/message instead."
-            )
-
+    def get(self):
         msg_hash = self.get_argument("hash", None)
         if msg_hash is None:
             # Hash is missing! This is a malformed request.

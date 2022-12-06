@@ -164,11 +164,3 @@ class BrowserWebSocketHandlerTest(ServerTestCase):
                 )
 
                 patched_stop_runtime.assert_called_once()
-
-
-class StreamEndpointTest(ServerTestCase):
-    @parameterized.expand(["/stream", "/_stcore/stream"])
-    def test_endpoint_stream(self, url):
-        response = self.fetch(url)
-        self.assertEqual(400, response.code)
-        self.assertEqual(b'Can "Upgrade" only to "WebSocket".', response.body)

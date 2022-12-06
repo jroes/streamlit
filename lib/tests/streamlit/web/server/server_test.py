@@ -158,7 +158,7 @@ class ServerTest(ServerTestCase):
 
             # Connect to the server, and explicitly request compression.
             ws_client = await tornado.websocket.websocket_connect(
-                self.get_ws_url("/stream"), compression_options={}
+                self.get_ws_url("/_stcore/stream"), compression_options={}
             )
 
             # Ensure that the "permessage-deflate" extension is returned
@@ -174,7 +174,7 @@ class ServerTest(ServerTestCase):
 
             # Connect to the server, and explicitly request compression.
             ws_client = await tornado.websocket.websocket_connect(
-                self.get_ws_url("/stream"), compression_options={}
+                self.get_ws_url("/_stcore/stream"), compression_options={}
             )
 
             # Ensure that the "Sec-Websocket-Extensions" header is not
