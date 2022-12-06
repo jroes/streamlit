@@ -16,12 +16,10 @@ from typing import List
 
 import tornado.web
 
-from streamlit.logger import get_logger
 from streamlit.proto.openmetrics_data_model_pb2 import GAUGE
 from streamlit.proto.openmetrics_data_model_pb2 import MetricSet as MetricSetProto
 from streamlit.runtime.stats import CacheStat, StatsManager
-
-_LOGGER = get_logger(__name__)
+from streamlit.web.server.server_util import emit_endpoint_deprecation_notice
 
 
 class StatsRequestHandler(tornado.web.RequestHandler):
@@ -40,11 +38,9 @@ class StatsRequestHandler(tornado.web.RequestHandler):
         self.set_status(204)
         self.finish()
 
-    def get(self, subpath: str) -> None:
-        if not subpath == "_stcore/":
-            _LOGGER.warning(
-                "Endpoint /st-metrics is deprecated. Please use /_stcore/metrics instead."
-            )
+    def get(self) -> None:
+        if self.request.uri and not self.request.uri.startswith("_stcore/"):
+            emit_endpoint_deprecation_notice(self, new_path="/_stcore/metrics")
 
         stats = self._manager.get_stats()
 

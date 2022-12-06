@@ -80,12 +80,12 @@ UNIX_SOCKET_PREFIX = "unix://"
 # The endpoints
 MEDIA_ENDPOINT: Final = "/media"
 STREAM_ENDPOINT: Final = r"_stcore/stream"
-METRIC_ENDPOINT: Final = r"(st-metrics|_stcore/metrics)"
+METRIC_ENDPOINT: Final = r"(?:st-metrics|_stcore/metrics)"
 MESSAGE_ENDPOINT: Final = r"_stcore/message"
-HEALTH_ENDPOINT: Final = r"(healthz|_stcore/health)"
+HEALTH_ENDPOINT: Final = r"(?:healthz|_stcore/health)"
 ALLOWED_MESSAGE_ORIGIN_ENDPOINT: Final = r"_stcore/allowed-message-origins"
 SCRIPT_HEALTH_CHECK_ENDPOINT: Final = (
-    r"(script-health-check|_stcore/script-health-check)"
+    r"(?:script-health-check|_stcore/script-health-check)"
 )
 
 
@@ -246,7 +246,6 @@ class Server:
             (
                 make_url_path_regex(base, ALLOWED_MESSAGE_ORIGIN_ENDPOINT),
                 AllowedMessageOriginsHandler,
-                dict(callback=lambda: self._runtime.is_ready_for_browser_connection),
             ),
             (
                 make_url_path_regex(

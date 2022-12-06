@@ -55,14 +55,19 @@ class StatsHandlerTest(tornado.testing.AsyncHTTPTestCase):
         self.assertEqual(expected_body, response.body)
 
     def test_deprecated_endpoint(self):
-        with self.assertLogs("streamlit.web.server.stats_request_handler") as logs:
+        with self.assertLogs("streamlit.web.server.server_util") as logs:
             response = self.fetch("/st-metrics")
 
         self.assertEqual(200, response.code)
         self.assertEqual(
             logs.records[0].getMessage(),
-            "Endpoint /st-metrics is deprecated. Please use /_stcore/metrics instead.",
+            "Endpoint '/st-metrics' is deprecated. Please use '/_stcore/metrics' instead.",
         )
+        self.assertEqual(
+            response.headers["link"],
+            f'<http://127.0.0.1:{self.get_http_port()}/_stcore/metrics>; rel="alternate"',
+        )
+        self.assertEqual(response.headers["deprecation"], "True")
 
     def test_has_stats(self):
         self.mock_stats = [

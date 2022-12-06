@@ -335,36 +335,6 @@ class UnixSocketTest(unittest.TestCase):
             mock_server.add_socket.assert_called_with(some_socket)
 
 
-class HealthCheckEndpointTest(tornado.testing.AsyncHTTPTestCase):
-    async def does_script_run_without_error(self):
-        return True, "test_message"
-
-    async def is_ready_for_browser_connection(self):
-        return True, "ok"
-
-    def tearDown(self):
-        Runtime._instance = None
-        super().tearDown()
-
-    def get_app(self):
-        server = Server("mock/script/path", "test command line")
-        server._runtime.does_script_run_without_error = (
-            self.does_script_run_without_error
-        )
-        server._runtime._eventloop = self.asyncio_loop
-        return server._create_app()
-
-    @parameterized.expand(["/healthz", "/_stcore/health"])
-    def test_endpoint(self, url):
-        with mock.patch(
-            "streamlit.runtime.runtime.Runtime.is_ready_for_browser_connection",
-            self.is_ready_for_browser_connection(),
-        ):
-            response = self.fetch(url)
-        self.assertEqual(200, response.code)
-        self.assertEqual(b"ok", response.body)
-
-
 class ScriptCheckEndpointExistsTest(tornado.testing.AsyncHTTPTestCase):
     async def does_script_run_without_error(self):
         return True, "test_message"
@@ -387,11 +357,20 @@ class ScriptCheckEndpointExistsTest(tornado.testing.AsyncHTTPTestCase):
         server._runtime._eventloop = self.asyncio_loop
         return server._create_app()
 
-    @parameterized.expand(["/script-health-check", "/_stcore/script-health-check"])
-    def test_endpoint(self, url):
-        response = self.fetch(url)
+    def test_endpoint(self):
+        response = self.fetch("/_stcore/script-health-check")
         self.assertEqual(200, response.code)
         self.assertEqual(b"test_message", response.body)
+
+    def test_deprecated_endpoint(self):
+        with self.assertLogs("streamlit.web.server.server_util") as logs:
+            response = self.fetch("/script-health-check")
+        self.assertEqual(200, response.code)
+        self.assertEqual(b"test_message", response.body)
+        self.assertEqual(
+            logs.records[0].getMessage(),
+            "Endpoint '/script-health-check' is deprecated. Please use '/_stcore/script-health-check' instead.",
+        )
 
 
 class ScriptCheckEndpointDoesNotExistTest(tornado.testing.AsyncHTTPTestCase):
