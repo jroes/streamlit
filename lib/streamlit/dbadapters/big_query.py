@@ -12,40 +12,32 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-import os
 
 import google.auth as auth
-import google.oauth2.credentials as oauth2
 from google.cloud import bigquery
+from google.oauth2 import service_account
 
 
 class BigQueryAdapter:
+    def __init__(self):
+        register_data_type(
+            "pandas.core.frame.DataFrame", "bigquery.Cursor", self.convert_to_dataframe
+        )
+
     # Main docs: https://cloud.google.com/python/docs/reference/bigquery/latest
     # DBAPI docs: https://cloud.google.com/python/docs/reference/bigquery/latest/google.cloud.bigquery.dbapi
-    def connect(self, project, credentials, credentials_path: str) -> (bigquery.Client):
+    # Auth docs: https://googleapis.dev/python/google-auth/latest/user-guide.html
+    def connect(self, **credentials) -> (bigquery.Client, bigquery.Cursor):
         """
         Returns the BigQuery connection & cursor used to perform queries
         """
-        # TODO: Sort out main auth options - https://googleapis.dev/python/google-auth/latest/user-guide.html
-        if project and credentials:
-            # WIP: User Credentials option
+        if not credentials:
+            if "bigquery" in st.secrets:
+                credentials = st.secrets["bigquery"]
+                credentials.pop("adapter")
 
-            # Pass the OAuth2 Credentials (specifically access token) to use for this client
-            oauth_credentials = oauth2.Credentials(credentials)
-            Client = bigquery.Client(project=project, credentials=oauth_credentials)
-
-        elif credentials_path:
-            # WIP: Service account private key files option
-
-            # Set the env var to the path of the JSON file containing the service account key
-            os.environ["GOOGLE_APPLICATION_CREDENTIALS"] = credentials_path
-            credentials, project = auth.default()
-            Client = bigquery.Client(project=project, credentials=credentials)
-
-        else:
-            # WIP: Application default credentials
-            credentials, project = auth.default()
-            Client = bigquery.Client(project=project, credentials=credentials)
+        creds = service_account.Credentials.from_service_account_info(credentials)
+        Client = bigquery.Client(credentials=creds)
 
         connection = bigquery.dbapi.Connection(Client)
         cursor = connection.cursor()
@@ -66,3 +58,8 @@ class BigQueryAdapter:
         Close the BigQuery connection and any cursors created from it.
         """
         connection.close()
+
+    def convert_to_dataframe(
+        self, query: str, connection: bigquery.dbapi.Connection
+    ) -> pd.DataFrame:
+        return connection.query(query).to_dataframe()

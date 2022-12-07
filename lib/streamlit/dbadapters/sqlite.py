@@ -14,8 +14,17 @@
 
 import sqlite3
 
+import pandas as pd
+
+from streamlit.runtime.connection import register_data_type
+
 
 class SQLiteAdapter:
+    def __init__(self):
+        register_data_type(
+            "pandas.core.frame.DataFrame", "sqlite3.Cursor", self.convert_to_dataframe
+        )
+
     def connect(self, database_name: str) -> (sqlite3.Connection, sqlite3.Cursor):
         """
         Create an sqlite connection to the database provided in the
@@ -38,3 +47,10 @@ class SQLiteAdapter:
     def close(self, connection: sqlite3.Connection) -> None:
         """Close the sqlite connection"""
         connection.close()
+
+    def convert_to_dataframe(self, cursor: sqlite3.Cursor) -> pd.DataFrame:
+        cols = []
+        for elt in cursor.description:
+            cols.append(elt[0])
+
+        return pd.DataFrame(cursor.fetchall(), columns=cols)
