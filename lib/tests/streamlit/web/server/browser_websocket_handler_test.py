@@ -19,7 +19,6 @@ import tornado.httpserver
 import tornado.testing
 import tornado.web
 import tornado.websocket
-from parameterized import parameterized
 
 from streamlit.proto.BackMsg_pb2 import BackMsg
 from streamlit.proto.ForwardMsg_pb2 import ForwardMsg

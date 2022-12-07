@@ -371,6 +371,11 @@ class ScriptCheckEndpointExistsTest(tornado.testing.AsyncHTTPTestCase):
             logs.records[0].getMessage(),
             "Endpoint '/script-health-check' is deprecated. Please use '/_stcore/script-health-check' instead.",
         )
+        self.assertEqual(
+            response.headers["link"],
+            f'<http://127.0.0.1:{self.get_http_port()}/_stcore/script-health-check>; rel="alternate"',
+        )
+        self.assertEqual(response.headers["deprecation"], "True")
 
 
 class ScriptCheckEndpointDoesNotExistTest(tornado.testing.AsyncHTTPTestCase):
