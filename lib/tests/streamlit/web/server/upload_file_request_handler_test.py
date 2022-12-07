@@ -68,7 +68,12 @@ class UploadFileRequestHandlerTest(tornado.testing.AsyncHTTPTestCase):
             method="POST", url=self.get_url("/_stcore/upload_file"), files=params
         ).prepare()
 
-        return self.fetch(url, method=req.method, headers=req.headers, body=req.body)
+        return self.fetch(
+            "/_stcore/upload_file",
+            method=req.method,
+            headers=req.headers,
+            body=req.body,
+        )
 
     def test_upload_one_file(self):
         """Uploading a file should populate our file_mgr."""
