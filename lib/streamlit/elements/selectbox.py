@@ -24,6 +24,10 @@ from streamlit.elements.utils import (
 )
 from streamlit.errors import StreamlitAPIException
 from streamlit.proto.Selectbox_pb2 import Selectbox as SelectboxProto
+from streamlit.runtime.connection import (
+    _is_dataframe_conversion_available,
+    try_convert_to_dataframe,
+)
 from streamlit.runtime.metrics_util import gather_metrics
 from streamlit.runtime.scriptrunner import ScriptRunContext, get_script_run_ctx
 from streamlit.runtime.state import (
@@ -179,8 +183,10 @@ class SelectboxMixin:
         key = to_key(key)
         check_callback_rules(self.dg, on_change)
         check_session_state_rules(default_value=None if index == 0 else index, key=key)
-
         maybe_raise_label_warnings(label, label_visibility)
+
+        if _is_dataframe_conversion_available(options):
+            options = try_convert_to_dataframe(type(options), options)
 
         opt = ensure_indexable(options)
 

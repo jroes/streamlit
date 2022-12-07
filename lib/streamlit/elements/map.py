@@ -25,6 +25,10 @@ import streamlit.elements.deck_gl_json_chart as deck_gl_json_chart
 from streamlit import type_util
 from streamlit.errors import StreamlitAPIException
 from streamlit.proto.DeckGlJsonChart_pb2 import DeckGlJsonChart as DeckGlJsonChartProto
+from streamlit.runtime.connection import (
+    _is_dataframe_conversion_available,
+    try_convert_to_dataframe,
+)
 from streamlit.runtime.metrics_util import gather_metrics
 
 if TYPE_CHECKING:
@@ -122,6 +126,10 @@ class MapMixin:
 
         """
         map_proto = DeckGlJsonChartProto()
+
+        if _is_dataframe_conversion_available(data):
+            data = try_convert_to_dataframe(type(data), data)
+
         map_proto.json = to_deckgl_json(data, zoom)
         map_proto.use_container_width = use_container_width
         return self.dg._enqueue("deck_gl_json_chart", map_proto)

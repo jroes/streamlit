@@ -23,6 +23,10 @@ from typing_extensions import Final
 from streamlit import type_util
 from streamlit.errors import StreamlitAPIException
 from streamlit.logger import get_logger
+from streamlit.runtime.connection import (
+    _is_dataframe_conversion_available,
+    try_convert_to_dataframe,
+)
 from streamlit.runtime.metrics_util import gather_metrics
 from streamlit.runtime.state import SessionStateProxy
 from streamlit.user_info import UserInfoProxy
@@ -178,6 +182,9 @@ class WriteMixin:
                 string_buffer[:] = []
 
         for arg in args:
+            if _is_dataframe_conversion_available(arg):
+                arg = try_convert_to_dataframe(type(arg), arg)
+
             # Order matters!
             if isinstance(arg, str):
                 string_buffer.append(arg)

@@ -45,40 +45,41 @@ def _get_connection(connection_name, **kwargs):
 
 
 @singleton
-def _conversion_mapping():
+def dataframe_conversion_mapping():
     return {}
 
 
 def register_data_type(from_type: str, to_type: str, conversion_func):
-    mapping = _conversion_mapping()
-    mapping[to_type] = mapping.get(to_type, {})
-    mapping[to_type][from_type] = conversion_func
+    mapping = dataframe_conversion_mapping()
+    mapping[from_type] = mapping.get(from_type, {})
+    mapping[from_type][to_type] = conversion_func
+
+
+def _is_dataframe_conversion_available(data) -> bool:
+    mapping = dataframe_conversion_mapping()
+    if mapping.get(str(type(data)), None) is None:
+        return False
+    return True
 
 
 def try_convert_to_dataframe(data_type, data):
-    mapping = _conversion_mapping()
-    st.write(mapping)
-    conversion_func = mapping.get(data_type, {}).get(
+    mapping = dataframe_conversion_mapping()
+    conversion_func = mapping.get(str(data_type), {}).get(
         "pandas.core.frame.DataFrame", None
     )
 
     if conversion_func is None:
-        st.error(
-            f"""
-            No conversion available for data type {data_type} to dataframe.
-            """
-        )
+        return None
     else:
         return conversion_func(data)
 
 
 def connection(connection_name: str, **kwargs):
-    st.write("Inside the Connection API ✅")
     adapter, connection, cursor = _get_connection(connection_name, **kwargs)
 
     if not adapter.is_connected(connection):
         _get_connection.clear()
-        _conversion_mapping.clear()
+        dataframe_conversion_mapping.clear()
         adapter, connection, cursor = _get_connection(connection_name, **kwargs)
 
     return connection, cursor

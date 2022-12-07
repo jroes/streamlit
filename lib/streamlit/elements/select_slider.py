@@ -37,6 +37,10 @@ from streamlit.elements.utils import (
 )
 from streamlit.errors import StreamlitAPIException
 from streamlit.proto.Slider_pb2 import Slider as SliderProto
+from streamlit.runtime.connection import (
+    _is_dataframe_conversion_available,
+    try_convert_to_dataframe,
+)
 from streamlit.runtime.metrics_util import gather_metrics
 from streamlit.runtime.scriptrunner import ScriptRunContext, get_script_run_ctx
 from streamlit.runtime.state import (
@@ -237,6 +241,10 @@ class SelectSliderMixin:
         check_callback_rules(self.dg, on_change)
         check_session_state_rules(default_value=value, key=key)
         maybe_raise_label_warnings(label, label_visibility)
+
+        if _is_dataframe_conversion_available(options):
+            options = try_convert_to_dataframe(type(options), options)
+
         opt = ensure_indexable(options)
 
         if len(opt) == 0:

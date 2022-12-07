@@ -22,7 +22,9 @@ from streamlit.runtime.connection import register_data_type
 class SQLiteAdapter:
     def __init__(self):
         register_data_type(
-            "pandas.core.frame.DataFrame", "sqlite3.Cursor", self.convert_to_dataframe
+            str(sqlite3.Cursor),
+            "pandas.core.frame.DataFrame",
+            self.convert_to_dataframe,
         )
 
     def connect(self, database_name: str) -> (sqlite3.Connection, sqlite3.Cursor):

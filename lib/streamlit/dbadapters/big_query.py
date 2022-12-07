@@ -17,11 +17,18 @@ import google.auth as auth
 from google.cloud import bigquery
 from google.oauth2 import service_account
 
+# TODO:
+# Double Check Authentication for connect method
+# refactor connection.py away from database name
+# dataframe conversion method
+
 
 class BigQueryAdapter:
     def __init__(self):
         register_data_type(
-            "pandas.core.frame.DataFrame", "bigquery.Cursor", self.convert_to_dataframe
+            str(bigquery.Cursor),
+            "pandas.core.frame.DataFrame",
+            self.convert_to_dataframe,
         )
 
     # Main docs: https://cloud.google.com/python/docs/reference/bigquery/latest

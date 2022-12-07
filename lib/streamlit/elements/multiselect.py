@@ -35,6 +35,10 @@ from streamlit.elements.utils import (
 )
 from streamlit.errors import StreamlitAPIException
 from streamlit.proto.MultiSelect_pb2 import MultiSelect as MultiSelectProto
+from streamlit.runtime.connection import (
+    _is_dataframe_conversion_available,
+    try_convert_to_dataframe,
+)
 from streamlit.runtime.metrics_util import gather_metrics
 from streamlit.runtime.scriptrunner import ScriptRunContext, get_script_run_ctx
 from streamlit.runtime.state import (
@@ -264,9 +268,12 @@ class MultiSelectMixin:
         key = to_key(key)
         check_callback_rules(self.dg, on_change)
         check_session_state_rules(default_value=default, key=key)
+        maybe_raise_label_warnings(label, label_visibility)
+
+        if _is_dataframe_conversion_available(options):
+            options = try_convert_to_dataframe(type(options), options)
 
         opt = ensure_indexable(options)
-        maybe_raise_label_warnings(label, label_visibility)
 
         indices = _check_and_convert_to_indices(opt, default)
         multiselect_proto = MultiSelectProto()
