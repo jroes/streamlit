@@ -62,4 +62,5 @@ class BigQueryAdapter:
 
     def convert_to_dataframe(self, output) -> pd.DataFrame:
         # https://googleapis.dev/python/bigquery/latest/usage/pandas.html
+        # TODO: Test if to_dataframe() call still works with dbapi
         return output.to_dataframe()
