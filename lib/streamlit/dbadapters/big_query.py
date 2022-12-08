@@ -17,10 +17,10 @@ import google.auth as auth
 from google.cloud import bigquery
 from google.oauth2 import service_account
 
-# TODO:
-# Double Check Authentication for connect method
-# refactor connection.py away from database name
-# dataframe conversion method
+# Main docs: https://cloud.google.com/python/docs/reference/bigquery/latest
+# DBAPI docs: https://googleapis.dev/python/bigquery/latest/dbapi.html
+#               https://cloud.google.com/python/docs/reference/bigquery/latest/google.cloud.bigquery.dbapi
+# Auth docs: https://googleapis.dev/python/google-auth/latest/user-guide.html
 
 
 class BigQueryAdapter:
@@ -31,18 +31,12 @@ class BigQueryAdapter:
             self.convert_to_dataframe,
         )
 
-    # Main docs: https://cloud.google.com/python/docs/reference/bigquery/latest
-    # DBAPI docs: https://cloud.google.com/python/docs/reference/bigquery/latest/google.cloud.bigquery.dbapi
-    # Auth docs: https://googleapis.dev/python/google-auth/latest/user-guide.html
-    def connect(self, **credentials) -> (bigquery.Client, bigquery.Cursor):
+    def connect(
+        self, **credentials
+    ) -> (bigquery.dbapi.Connection, bigquery.dbapi.Cursor):
         """
         Returns the BigQuery connection & cursor used to perform queries
         """
-        if not credentials:
-            if "bigquery" in st.secrets:
-                credentials = st.secrets["bigquery"]
-                credentials.pop("adapter")
-
         creds = service_account.Credentials.from_service_account_info(credentials)
         Client = bigquery.Client(credentials=creds)
 
@@ -66,7 +60,6 @@ class BigQueryAdapter:
         """
         connection.close()
 
-    def convert_to_dataframe(
-        self, query: str, connection: bigquery.dbapi.Connection
-    ) -> pd.DataFrame:
-        return connection.query(query).to_dataframe()
+    def convert_to_dataframe(self, output) -> pd.DataFrame:
+        # https://googleapis.dev/python/bigquery/latest/usage/pandas.html
+        return output.to_dataframe()

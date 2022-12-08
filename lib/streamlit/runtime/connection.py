@@ -22,6 +22,11 @@ def _retrieve_secrets(connection_name: str):
     return getattr(st.secrets.connection, connection_name)
 
 
+def _retrieve_credentials(secrets):
+    secrets.pop("adapter")
+    return secrets
+
+
 def _import_adapter(connection_name, secret_values):
     module_path = secret_values.adapter.split(".")
     module_name = ".".join(module_path[0:-1])
@@ -29,18 +34,23 @@ def _import_adapter(connection_name, secret_values):
 
     module = importlib.import_module(module_name)
     Adapter = getattr(module, class_name)
-    # TODO: Refactor - Database name not used for BigQuery
-    database_name = secret_values.database_name
-    return Adapter, database_name
+    return Adapter
 
 
 @singleton
 def _get_connection(connection_name, **kwargs):
     secret_values = _retrieve_secrets(connection_name)
-    Adapter, database_name = _import_adapter(connection_name, secret_values)
+    Adapter = _import_adapter(connection_name, secret_values)
     adapter_instance = Adapter()
-    # TODO: Refactor - Database name not used for BigQuery
-    connection, cursor = adapter_instance.connect(database_name)
+    if connection_name == "sqlite":
+        # SQLLite takes a database name
+        database_name = secret_values.database_name
+        connection, cursor = adapter_instance.connect(database_name)
+    if connection_name == "bigquery":
+        # BigQuery takes connection credentials
+        credentials = _retrieve_credentials(secret_values)
+        connection, cursor = adapter_instance.connect(credentials)
+
     return adapter_instance, connection, cursor
 
 
