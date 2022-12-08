@@ -12,10 +12,12 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 
-
-import google.auth as auth
-from google.cloud import bigquery
+import google.cloud.bigquery as bigquery
+import google.cloud.bigquery.dbapi as bq_dbapi
+import pandas as pd
 from google.oauth2 import service_account
+
+from streamlit.runtime.connection import register_data_type
 
 # Main docs: https://cloud.google.com/python/docs/reference/bigquery/latest
 # DBAPI docs: https://googleapis.dev/python/bigquery/latest/dbapi.html
@@ -26,25 +28,23 @@ from google.oauth2 import service_account
 class BigQueryAdapter:
     def __init__(self):
         register_data_type(
-            str(bigquery.Cursor),
+            str(bq_dbapi.Cursor),
             "pandas.core.frame.DataFrame",
             self.convert_to_dataframe,
         )
 
-    def connect(
-        self, **credentials
-    ) -> (bigquery.dbapi.Connection, bigquery.dbapi.Cursor):
+    def connect(self, credentials) -> (bq_dbapi.Connection, bq_dbapi.Cursor):
         """
         Returns the BigQuery connection & cursor used to perform queries
         """
         creds = service_account.Credentials.from_service_account_info(credentials)
         Client = bigquery.Client(credentials=creds)
 
-        connection = bigquery.dbapi.Connection(Client)
+        connection = bq_dbapi.Connection(Client)
         cursor = connection.cursor()
         return connection, cursor
 
-    def is_connected(self, connection: bigquery.dbapi.Connection) -> bool:
+    def is_connected(self, connection: bq_dbapi.Connection) -> bool:
         """Test if an BigQuery connection is active"""
         try:
             # Per docs: This is a no-op, but for consistency raises an error if connection is closed
@@ -54,7 +54,7 @@ class BigQueryAdapter:
         except Exception:
             return False
 
-    def close(self, connection: bigquery.dbapi.Connection) -> None:
+    def close(self, connection: bq_dbapi.Connection) -> None:
         """
         Close the BigQuery connection and any cursors created from it.
         """

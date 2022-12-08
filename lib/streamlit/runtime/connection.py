@@ -23,8 +23,7 @@ def _retrieve_secrets(connection_name: str):
 
 
 def _retrieve_credentials(secrets):
-    secrets.pop("adapter")
-    return secrets
+    return secrets.credentials
 
 
 def _import_adapter(connection_name, secret_values):
