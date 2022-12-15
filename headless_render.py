@@ -14,6 +14,8 @@
 
 from typing import Any, List, Optional
 
+import tomli
+
 from streamlit.proto.ClientState_pb2 import ClientState
 from streamlit.proto.Delta_pb2 import Delta
 from streamlit.proto.Element_pb2 import Element
@@ -128,31 +130,32 @@ class HeadlessScriptRunner(ScriptRunner):
         return self._session_state.filtered_state
 
 
-def run():
+def run(verbose=True, parameters_path="./parameters.toml"):
     config = RuntimeConfig("test.py", "", MemoryMediaFileStorage(""))
     _ = Runtime(config)
 
-    runner = HeadlessScriptRunner("test.py")
-    runner.start()
-    runner.join()
-    print(runner.widgets)
+    with open(parameters_path, "rb") as f:
+        parameters = tomli.load(f)
 
-    runner = HeadlessScriptRunner("test.py")
-    runner.set_widget("name", "jon")
-    runner.start()
-    runner.join()
-    assert runner.widgets.get("name") == "jon"
-    import pdb
+    if "input" not in parameters:
+        raise Exception(
+            f"Missing at least one input in parameters file" f"{parameters_path}"
+        )
 
-    pdb.set_trace()
-    print(runner.widgets)
+    for parameter_set in parameters["input"]:
+        runner = HeadlessScriptRunner("test.py")
 
-    runner = HeadlessScriptRunner("test.py")
-    runner.set_widget("name", "will")
-    runner.start()
-    runner.join()
-    assert runner.widgets.get("name") == "will"
-    print(runner.widgets)
+        if verbose:
+            print(f"input: {parameter_set}")
+
+        for (k, v) in parameter_set.items():
+            runner.set_widget(k, v)
+
+        runner.start()
+        runner.join()
+        if verbose:
+            print(f"output: {runner.widgets}")
+            print(f"output: {runner.deltas()}")
 
 
 run()
